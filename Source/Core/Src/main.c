@@ -383,7 +383,6 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1){
-	  // servo motor 1&2
 //	  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
 
 	  if ((initial_char=read()) && ('1'<=initial_char) && (initial_char<='9')) {
