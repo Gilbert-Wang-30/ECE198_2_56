@@ -40,6 +40,8 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+ADC_HandleTypeDef hadc1;
+
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
 
@@ -55,47 +57,48 @@ static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_TIM3_Init(void);
+static void MX_ADC1_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-void motor1_off(TIM_HandleTypeDef *htim2){
-	__HAL_TIM_SET_COMPARE(htim2,TIM_CHANNEL_1, 1080);
-}
-void motor2_off(TIM_HandleTypeDef *htim2){
-	__HAL_TIM_SET_COMPARE(htim2,TIM_CHANNEL_2, 1080);
-}
-void motor3_off(TIM_HandleTypeDef *htim2){
-	__HAL_TIM_SET_COMPARE(htim2,TIM_CHANNEL_3, 1080);
-}
-void motor4_off(TIM_HandleTypeDef *htim3){
-	__HAL_TIM_SET_COMPARE(htim3,TIM_CHANNEL_1, 1080);
-}
-void motor5_off(TIM_HandleTypeDef *htim3){
-	__HAL_TIM_SET_COMPARE(htim3,TIM_CHANNEL_2, 1080);
-}
-void motor6_off(TIM_HandleTypeDef *htim3){
-	__HAL_TIM_SET_COMPARE(htim3,TIM_CHANNEL_3, 1080);
-}
 void motor1_on(TIM_HandleTypeDef *htim2){
-	__HAL_TIM_SET_COMPARE(htim2,TIM_CHANNEL_1, 1280);
+	__HAL_TIM_SET_COMPARE(htim2,TIM_CHANNEL_1, 990);
 }
 void motor2_on(TIM_HandleTypeDef *htim2){
-	__HAL_TIM_SET_COMPARE(htim2,TIM_CHANNEL_2, 1280);
+	__HAL_TIM_SET_COMPARE(htim2,TIM_CHANNEL_2, 1030);
 }
 void motor3_on(TIM_HandleTypeDef *htim2){
-	__HAL_TIM_SET_COMPARE(htim2,TIM_CHANNEL_3, 1280);
+	__HAL_TIM_SET_COMPARE(htim2,TIM_CHANNEL_3, 1080);
 }
 void motor4_on(TIM_HandleTypeDef *htim3){
-	__HAL_TIM_SET_COMPARE(htim3,TIM_CHANNEL_1, 880);
+	__HAL_TIM_SET_COMPARE(htim3,TIM_CHANNEL_1, 1080);
 }
 void motor5_on(TIM_HandleTypeDef *htim3){
-	__HAL_TIM_SET_COMPARE(htim3,TIM_CHANNEL_2, 880);
+	__HAL_TIM_SET_COMPARE(htim3,TIM_CHANNEL_2, 1080);
 }
 void motor6_on(TIM_HandleTypeDef *htim3){
-	__HAL_TIM_SET_COMPARE(htim3,TIM_CHANNEL_3, 880);
+	__HAL_TIM_SET_COMPARE(htim3,TIM_CHANNEL_3, 1050);
+}
+void motor1_off(TIM_HandleTypeDef *htim2){
+	__HAL_TIM_SET_COMPARE(htim2,TIM_CHANNEL_1, 780);
+}
+void motor2_off(TIM_HandleTypeDef *htim2){
+	__HAL_TIM_SET_COMPARE(htim2,TIM_CHANNEL_2, 850);
+}
+void motor3_off(TIM_HandleTypeDef *htim2){
+	__HAL_TIM_SET_COMPARE(htim2,TIM_CHANNEL_3, 1010);
+}
+void motor4_off(TIM_HandleTypeDef *htim3){
+	__HAL_TIM_SET_COMPARE(htim3,TIM_CHANNEL_1, 1360);
+}
+void motor5_off(TIM_HandleTypeDef *htim3){
+	__HAL_TIM_SET_COMPARE(htim3,TIM_CHANNEL_2, 1250);
+}
+void motor6_off(TIM_HandleTypeDef *htim3){
+	__HAL_TIM_SET_COMPARE(htim3,TIM_CHANNEL_3, 1220);
 }
 void display(char c){
 	if(c == 'a'){
@@ -338,7 +341,11 @@ char read(void)
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+	char initial_char = 0;
+	int count = 0;
+	char string[128] = {0};
+	int top = 0;
+	uint16_t value = 0;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -362,52 +369,63 @@ int main(void)
   MX_USART2_UART_Init();
   MX_TIM2_Init();
   MX_TIM3_Init();
+  MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
+//  HAL_ADC_Start(&hadc1);
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_3);
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);
-
-  char prev = 0;
-  char c = 0;
-  int counter = 0;
-
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1){
-	  HAL_Delay(49);
-	  if(c=read()){
-		  counter = 0;
-		  c += 48;
-	  } else {
-		  ++counter;
-		  continue;
+	  // servo motor 1&2
+//	  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
+
+	  if ((initial_char=read()) && ('1'<=initial_char) && (initial_char<='9')) {
+		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
+		  HAL_Delay(100);
+		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);
+		  HAL_Delay(100);
+		  while (1) {
+			  if (read()=='#' || count>=2) {
+				  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
+				  string[top++] = (initial_char-49)*3+ 97 + count;
+				  HAL_Delay(300);
+				  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);
+				  HAL_Delay(100);
+				  break;
+			  } else if (read()==initial_char) {
+				  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
+				  HAL_Delay(100);
+				  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);
+				  HAL_Delay(100);
+				  count++;
+			  }
+		  }
+		  count = 0;
 	  }
 
+//	  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
+//	  HAL_ADC_Start(&hadc1);
+//	  HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
+//	  value = HAL_ADC_GetValue(&hadc1)/10;
+//	  HAL_Delay(value);
+//	  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);
+//	  HAL_Delay(100);
 
-	  if (counter < 20) {
-		  continue;
-	  } else if (0<=c-prev && c-prev<=1 && counter<100) {
-		  ++c;
-		  counter = 0;
-	  } else {
-		  display(c);
-		  prev = 0;
-		  c = 0;
-		  counter = 0;
-	  }
+	}
 
-	  prev = c;
-  }
-
-      /* USER CODE END WHILE */
-      /* USER CODE BEGIN 3 */
-    /* USER CODE END 3 */
 }
+/* USER CODE END WHILE */
+
+/* USER CODE BEGIN 3 */
+
+/* USER CODE END 3 */
 
 /**
   * @brief System Clock Configuration
@@ -453,6 +471,58 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+}
+
+/**
+  * @brief ADC1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_ADC1_Init(void)
+{
+
+  /* USER CODE BEGIN ADC1_Init 0 */
+
+  /* USER CODE END ADC1_Init 0 */
+
+  ADC_ChannelConfTypeDef sConfig = {0};
+
+  /* USER CODE BEGIN ADC1_Init 1 */
+
+  /* USER CODE END ADC1_Init 1 */
+
+  /** Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion)
+  */
+  hadc1.Instance = ADC1;
+  hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV4;
+  hadc1.Init.Resolution = ADC_RESOLUTION_12B;
+  hadc1.Init.ScanConvMode = DISABLE;
+  hadc1.Init.ContinuousConvMode = ENABLE;
+  hadc1.Init.DiscontinuousConvMode = DISABLE;
+  hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
+  hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
+  hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+  hadc1.Init.NbrOfConversion = 1;
+  hadc1.Init.DMAContinuousRequests = DISABLE;
+  hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
+  if (HAL_ADC_Init(&hadc1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
+  */
+  sConfig.Channel = ADC_CHANNEL_9;
+  sConfig.Rank = 1;
+  sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN ADC1_Init 2 */
+
+  /* USER CODE END ADC1_Init 2 */
+
 }
 
 /**
