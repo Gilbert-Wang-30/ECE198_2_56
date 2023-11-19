@@ -408,6 +408,20 @@ int main(void)
 			  }
 		  }
 		  count = 0;
+	  } else if (initial_char=='*' || top==128) {
+		  for (int i=0; i<top; ++i) {
+			  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
+			  display(string[i]);
+
+			  HAL_ADC_Start(&hadc1);
+			  HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
+			  value = HAL_ADC_GetValue(&hadc1)/4 + 30;
+			  HAL_Delay(value);
+
+			  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);
+			  HAL_Delay(70);
+		  }
+		  top = 0;
 	  }
 
 //	  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
